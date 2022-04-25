@@ -41,6 +41,11 @@ class LoginController extends Controller
 
     public function index()
     {
-        echo "TELA DE LOGIN";
+       return view('admin.login');
+    }
+
+    public function authenticate()
+    {
+
     }
 }
