@@ -188,8 +188,8 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
-    'logout_url' => 'logout',
+    'dashboard_url' => 'dashboard',
+    'logout_url' => 'dashboard/logout',
     'login_url' => 'dashboard/login',
     'register_url' => 'dashboard/register',
     'password_reset_url' => 'password/reset',

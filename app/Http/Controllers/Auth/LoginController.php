@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -27,7 +31,7 @@ class LoginController extends Controller
      * @var string
      */
     //protected $redirectTo = RouteServiceProvider::HOME;
-    protected $redirectTo ='/dashboard';
+    protected $redirectTo = '/dashboard';
 
     /**
      * Create a new controller instance.
@@ -41,11 +45,54 @@ class LoginController extends Controller
 
     public function index()
     {
-       return view('admin.login');
+        return view('admin.login');
     }
 
-    public function authenticate()
+    public function authenticate(Request $request)
     {
+        $data = $request->only(
+            'email',
+            'password',
+        );
 
+        $validator = $this->validator($data);
+
+        $remember = $request->input('remember', false);
+
+        if ($validator->fails()) {
+            return redirect()->route('login')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        /* Faz a tentativa de login com o Auth attempt */
+        if (Auth::attempt($data, $remember)) {
+            return redirect()->route('admin');
+        }
+
+        /* Personalizando mensagem de erro de acordo com o campo */
+        $validator->errors()->add('password', 'E-mail e/ou senha inválidos!');
+
+        /* Se não passar no login será redirecionado para tela de login */
+        return redirect()->route('login')
+            ->withErrors($validator)
+            ->withInput();
+
+
+    }
+
+    public function logout()
+    {
+        Auth::logout();
+        return redirect()->route('login');
+    }
+
+    protected function validator(array $data)
+    {
+        /* Parametros de validação do login recebido do array $data que veio do forms de login */
+        return Validator::make($data, [
+            'email' => ['required', 'string', 'email', 'max:100'],
+            'password' => ['required', 'string', 'min:8']
+        ]);
     }
 }

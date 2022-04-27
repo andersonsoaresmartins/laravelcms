@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -53,22 +54,49 @@ class RegisterController extends Controller
     /**
      * @return void
      */
-    public function register()
+    public function register(Request $request)
     {
+        /* ONLY discrimina apenas os dados que quero receber do request */
+        $data = $request->only(
+            'name',
+            'email',
+            'password',
+            'password_confirmation'
+        );
 
+        /* Acionando a função validadtor que valida os dados enviados pelo formulário para o request */
+        $validator = $this->validator($data);
+
+        /* Testando se o validator encontrou erros e retornando através do withErrors
+        withInputs tras os dados pré preenchidos devolta ao formulário em caso de falha */
+        if ($validator->fails()) {
+            return redirect()->route('register')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        /* Enviando para a função create os dados recebidos do formulário para inserção no DB e já autenticando
+        o usuário com o Auth e redirecionando para o dashboard */
+        $user = $this->create($data);
+
+
+        if ($user) {
+            Auth::login($user);
+        }
+        return redirect()->route('admin');
     }
 
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array  $data
+     * @param array $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'string', 'email', 'max:100', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
     }
@@ -76,7 +104,7 @@ class RegisterController extends Controller
     /**
      * Create a new user instance after a valid registration.
      *
-     * @param  array  $data
+     * @param array $data
      * @return \App\Models\User
      */
     protected function create(array $data)
